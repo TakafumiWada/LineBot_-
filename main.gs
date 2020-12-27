@@ -2,46 +2,10 @@
 
 
 
-//たくまニキの
 //var CHANNEL_ACCESS_TOKEN = "P1mM6+GPGo+kJHm3cOYvjCa0YBW5A+Qx9v7OhOxvRnktNmt24D+A8U1YEVHail3At5xzgZIB0X6WcmpYcxxHytbrf1ijJHn1UQdkxfdG6QDzeuSDGWdg+/u1j0PJtH9Zz1vpEeHFYSWW6+x+Rfr+1QdB04t89/1O/w1cDnyilFU=";
 
-//わでぃの
 var CHANNEL_ACCESS_TOKEN ='06bcb/nKEKaW5W3rZp3h402SyqrJxy+PXVg59Vz3797WPu0y1enoRa/3n1tZMXPRztivTY0IJHbSuQjOBsv/dDr2NFADnBalsLnyAkbAu0PUOSI3TdE+prHpEAR9UCdTBy+gxLNpOn2aU8voHzh1pAdB04t89/1O/w1cDnyilFU=';
 
-function init(){
-  let cache = CacheService.getScriptCache();
-  cache.put("type",0)
-  cache.put("row",0) 
-}
-
-function getDataFromSpreadSheet(){
-  const sheet = SpreadsheetApp.getActiveSheet();
-  //  A列の値を全部とってくる
-  const range = sheet.getRange(1,1,sheet.getLastRow() ,4);
-  console.log(range.getValues());
-  return range.getValues()//[i][0]：ユーザー名、[i][1]：ユーザーID
-}
-
-function getSelectedThemeFromSpreadSheet(){
-  const sheet = SpreadsheetApp.getActiveSheet();
-  const range = sheet.getRange(1,6);
-  console.log(range.getValue());
-  return range.getValue()
-}
-
-function getKingFromSpreadSheet(){
-  const sheet = SpreadsheetApp.getActiveSheet();
-  const range = sheet.getRange(1,3);
-  console.log(range.getValue());
-  return range.getValue()
-}
-
-function getGroupIDFromSpreadSheet(){
-  const sheet = SpreadsheetApp.getActiveSheet();
-  const range = sheet.getRange(1,7);
-  console.log(range.getValue());
-  return range.getValue()
-}
 
 function doPost(e) {
  console.log(e)
@@ -72,12 +36,18 @@ function reply_message(e,input) {
   var themeData=getSelectedThemeFromSpreadSheet()
   var kingData=getKingFromSpreadSheet()
  
-    var replyMessage="エラー！↑のメッセージを見返して指示通りのメッセージを送ってね"
-   
+    var replyMessage="エラー！\n↑のメッセージを見返して指示通りのメッセージを送ってね"
+  if(input.type=='text'){
+     if(input.text.match('ゲーム開始')){
+       cache.put("type",0)
+       cache.put("row",0) 
+       replyMessage="○○王決定戦始めるよー！\n\nグループ招待ありがとう！○○王決定戦を開催します！\n▶︎○○王とは\n○○王はYouTuberの中でも流行っている、お題に沿って王様が答えそうなワードを当てるゲームです！\n\n▶︎始め方\n①参加者全員がこのアカウントを友達追加する\n②このグループ内で「参加」と送る\n③全員送ったら「参加締め切り」と送ろう！あとは指示通りにゲームを進行していこう！"
+     }
+  }
+  
   switch(type) {
       case "0":
         if(input.type=='text'){
-        //「参加」と送ったらシートに書き込み、名前を返す
         if(input.text.match('参加')){
           SpreadsheetApp.getActiveSheet().getRange(1,7).setValue(group_id)
           
@@ -93,19 +63,9 @@ function reply_message(e,input) {
                   SpreadsheetApp.getActiveSheet().getRange(range_variable,1,1,2).setValues([[display_name,user_id]]);
                   //  cacheに書き込んでいく
                   cache.put("row",range_variable)
-                  replyMessage=display_name
+                  replyMessage="「"+display_name+"」の参加を受け付けたよ！"
                   break;
                 }
-              /*  ***コチャの見極め***
-              if (group_id == null) {
-                //個人チャットの場合
-                replyMessage="個人チャットだよ"
-              }else{
-                //  グループチャットの場合 
-                //    送る内容
-                replyMessage=display_name
-                }
-                */
               }
             }
             if(input.text.match('参加締め切り')){
@@ -224,12 +184,17 @@ function reply_message(e,input) {
         if(input.text.match('答え合わせ')){
           for(var i=0;i < memberDataArray.length ; i++){
             if(memberDataArray[i][0]==kingData){
-              replyMessage=kingData+"の回答は...\n「"+memberDataArray[i][3]+"」です！！"
-              cache.put("type",0)
+              replyMessage=kingData+"の回答は...\n「"+memberDataArray[i][3]+"」です！！\n\n\n正解者はいたかな！？\n「もう一度！」と送ると最初に戻ります！再チャレンジだ！！"
             }
         }
      }
- }
+   }
+   if(input.type=='text'){
+        if(input.text.match('もう一度')){
+          cache.put("type",0)
+          replyMessage="○○王決定戦始めるよー！\n\nグループ招待ありがとう！○○王決定戦を開催します！\n▶︎○○王とは\n○○王はYouTuberの中でも流行っている、お題に沿って王様が答えそうなワードを当てるゲームです！\n\n▶︎始め方\n①参加者全員がこのアカウントを友達追加する\n②このグループ内で「参加」と送る\n③全員送ったら「参加締め切り」と送ろう！あとは指示通りにゲームを進行していこう！"
+        }
+    }
 }
  
  
@@ -256,31 +221,50 @@ function reply_message(e,input) {
   UrlFetchApp.fetch("https://api.line.me/v2/bot/message/reply", options);
   
     
-   /* 
-    //  ユーザーにDMを送る
-    const line = require('@line/bot-sdk');
-    
-    const client = new line.Client({
-      channelAccessToken: CHANNEL_ACCESS_TOKEN
-    });
-    
-    const message = {
-      type: 'text',
-      text: 'Hello World!'
-    };
-    
-    client.pushMessage(USER_ID, message)
-    .then(() => {
-          consele.log("うまくいった")
-  })
-  .catch((err) => {
-         // error handling
-         consele.log("エラーだよ")
-});
-*/
 }
 
 //****メソッド集****
+
+//初期化
+function init(){
+  let cache = CacheService.getScriptCache();
+  cache.put("type",0)
+  cache.put("row",0) 
+}
+
+//スプシから4列目までのデータを取得
+function getDataFromSpreadSheet(){
+  const sheet = SpreadsheetApp.getActiveSheet();
+   const range = sheet.getRange(1,1,sheet.getLastRow() ,4);
+  console.log(range.getValues());
+  return range.getValues()//[i][0]：ユーザー名、[i][1]：ユーザーID
+}
+
+//お題を取得
+function getSelectedThemeFromSpreadSheet(){
+  const sheet = SpreadsheetApp.getActiveSheet();
+  const range = sheet.getRange(1,6);
+  console.log(range.getValue());
+  return range.getValue()
+}
+
+//王様を取得
+function getKingFromSpreadSheet(){
+  const sheet = SpreadsheetApp.getActiveSheet();
+  const range = sheet.getRange(1,3);
+  console.log(range.getValue());
+  return range.getValue()
+}
+
+//グループIDを取得
+function getGroupIDFromSpreadSheet(){
+  const sheet = SpreadsheetApp.getActiveSheet();
+  const range = sheet.getRange(1,7);
+  console.log(range.getValue());
+  return range.getValue()
+}
+
+
 
 //User_idを元にニックネームをとってくる関数
 function getUserProfile(user_id){ 
@@ -340,7 +324,7 @@ function checkAllAnswerAtGroup(memberDataArray){
   //  空白をとる
   var values = []
   for  (var i = 0; i< range.getValues().length ; i++){
-    if(range.getValues()[i]!=""){
+    if(range.getValues()[i][3]!==""){
       values.push(range.getValues()[i]);
     }
   }
